@@ -1,8 +1,8 @@
 # ALL WE NEED IS FFM 🙃
 
-This project is my project, and it is also a study of TensorFlow, Deep Learning(CNN, RNN, LSTM, etc.).
+This project is my project, and it is also a study of TensorFlow, Deep Learning(CNN, RNN, LSTM, etc.) and other Machine Learning things.
 
-The main objective of the project is to solve the multi-label text classification problem based on Convolutional Neural Networks. Thus, the format of the data label is like [0, 1, 0, ..., 1, 1] according to the characteristics of such problem.
+The main objective of the project is to predict the chances of a user listening to a song repetitively after the first observable listening event within a time window was triggered. If there are recurring listening event(s) triggered within a month after the user’s very first observable listening event, its target is marked 1, and 0 otherwise in the training set. The same rule applies to the testing set.
 
 ## Requirements
 
@@ -34,7 +34,7 @@ This most important model used in this solution is called **Field-aware Factoriz
 
 
 
-## How to kick the ass 👾
+## How to Kick the Ass 👾
 
 ### Step 1: Exploratory Data Analysis(EDA)
 
