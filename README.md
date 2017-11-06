@@ -96,7 +96,7 @@ Feature Engineering 是把 raw data 转换成 features 的整个过程的总称�
 
   - `gbdt_model_index`: 来自 GBDT 模型的 tree index，某 observation 的自动特征
 
-#### Missing Value Imputation 缺失值处理
+#### 2.1 Missing Value Imputation 缺失值处理
 
 最简单暴力的做法当然就是直接 drop 掉那些含有缺失值的 rows。
 
@@ -113,25 +113,25 @@ Feature Engineering 是把 raw data 转换成 features 的整个过程的总称�
 
 不过其实有些算法是可以容许缺失值的，这时候可以新增一个` has_missing_value` 栏位（称为 NA indicator column）。
 
-#### Outliers Detection 野点处理
+#### 2.2 Outliers Detection 野点处理
 
 发现离群值最直观的方式就是画图表，针对单一特征可以使用 box plot；两两特征则可以使用 scatter plot。
 
 处置离群值的方式通常是直接删除或是做变换（例如 log transformation 或 binning），当然你也可以套用处理缺失值的方式。
 
-#### Duplicate Entries Removal 异常值处理
+#### 2.3 Duplicate Entries Removal 异常值处理
 
 Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target variable 却不同的数据。
 
-#### Feature Scaling 特征缩放
+#### 2.4 Feature Scaling 特征缩放
 
-- **Standardization 标准化**
+- **2.4.1 Standardization 标准化**
 
 原始数据集中，因为各个特征的含义和单位不同，每个特征的取值范围可能会差异很大。例如某个二元特征的范围是 0 或 1，另一个特征的范围可能是 [0, 1000000]，由于取值范围相差过大导致了模型可能会更偏向于取值范围较大的那个特征。解决的办法就是把各种不同 scale 的特征转换成同样的 scale，称为标准化或正规化。
 
 狭义来说，标准化专门指的是通过计算 z-score，让数据的 mean 为 0、 variance 为 1。
 
-- **Normalization 归一化**
+- **2.4.2 Normalization 归一化**
 
 归一化是指把每个样本缩放到单位范数（每个样本的范数为 1），适用于计算 dot product 或者两个样本之间的相似性。除了标准化、归一化之外，其他还有通过最大、最小值，把数据的范围缩放到 [0, 1] 或 [-1, 1] 的区间缩放法，不过这个方法容易受异常值的影响。
 
@@ -143,27 +143,27 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
 
 **3. 对 tree-based 的算法，基本上都不需要标准化或归一化，它们对 scale 不敏感。**
 
-#### Feature Transformation 特征变换
+#### 2.5 Feature Transformation 特征变换
 
 针对连续值特征：
 
-- **Rounding** 
+- **2.5.1 Rounding** 
 
   某些精度有到小数点后第 n 位的特征，如果你其实不需要那么精确，可以考虑 `round(value * m)` 或 `round(log(value))` 这样的做法，甚至可以把 round 之后的数值当成 categorical 特征。
 
-- **Log Transformation**
+- **2.5.2 Log Transformation**
 
   因为 x 越大，log(x) 增长的速度就越慢，所以取 log 的意义是可以 compress 大数和 expand 小数，换句话说就是压缩 "long tail" 和展开 "head"。假设 x 原本的范围是 [100, 1000]，log(x, 10) 之后的范围就变成 [2, 3] 了。也常常使用 log(1 + x) 或 log(x / (1 - x))。
 
   另外一种类似的做法是 square root 平方根或 cube root 立方根（可以用在负数）。
 
-- **Binarization**
+- **2.5.3 Binarization**
 
   对数值型的数据设定一个 threshold，大于就赋值为 1、小于就赋值为 0。例如 `score`，如果你只关心「及格」或「不及格」，可以直接把成绩对应到 1（`score >= 60`）和 0（`score < 60`）。或是你要做啤酒销量分析，你可以新增一个 `age >= 18` 的特征来标示出已成年。
 
   你有一个 `color` 的 categorical 特征，如果你不在乎实际上是什么颜色的话，其实也可以改成 `has_color`。
 
-- **Binning**
+- **2.5.4 Binning**
 
   也称为 bucketization。以 `age` 这样的特征为例，你可以把所有年龄拆分成 n 段，0-20 岁、20-40 岁、40-60 岁等或是 0-18 岁、18-40 岁、40-70 岁等（等距或等量），然后把个别的年龄对应到某一段，假设 26 岁是对应到第二个 bucket，那新特征的值就是 2。这种方式是人为地指定每个 bucket 的边界值，还有另外一种拆分法是根据数据的分布来拆，称为 quantization 或 quantile binning，你只需要指定 bucket 的数量即可。
 
@@ -171,13 +171,13 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
 
   binarization 和 binning 都是对 continuous 特征做 discretization 离散化，增强模型的非线性泛化能力。
 
-- **Integer Encoding**
+- **2.5.5 Integer Encoding**
 
   也称为 label encoding。把每个 category 对应到数字，一种做法是随机对应到 0, 1, 2, 3, 4 等数字；另外一种做法是依照该值出现的频率大小的顺序来给值，例如最常出现的值给 0，依序给 1, 2, 3 等等。如果是针对一些在某种程度上有次序的 categorical 特征（称为 ordinal），例如「钻石会员」「白金会员」「黄金会员」「普通会员」，直接 mapping 成数字可能没什么问题，但是如果是类似 `color` 或 `city` 这样的没有明显大小的特征的话，还是用 one-hot encoding 比较合适。不过如果用的是 tree-based 的算法就无所谓了。
 
   有些 categorical 特征也可能会用数字表示（例如 id），跟 continuous 特征的差别是，数值的差异或大小对 categorical 特征来说没有太大的意义。
 
-- **One-hot Encoding(OHE)**
+- **2.5.6 One-hot Encoding(OHE)**
 
   如果某个特征有 m 种值（例如 Taipei, Beijing, Tokyo），那它 one-hot encode 之后就会变成长度为 m 的向量：
 
@@ -195,7 +195,7 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
 
   OHE 的缺点是容易造成特征的维度大幅增加和没办法处理之前没见过的值。
 
-- **Bin-counting**
+- **2.5.7 Bin-counting**
 
   例如在 Computational Advertising 中，如果你有针对每个 user 的「广告曝光数（包含点击和未点击）」和「广告点击数」，你就可以算出每个 user 的「点击率」，然后用这个机率来表示每个 user，反之也可以对 ad id 使用类似的做法。
 
@@ -218,7 +218,7 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
   E      ...
   ```
 
-- **LabelCount Encoding**
+- **2.5.8 LabelCount Encoding**
 
   类似 Bin-cunting 的做法，一样是利用现有的 count 或其他统计上的资料，差别在于 LabelCount Encoding 最后用的是次序而不是数值本身。优点是对异常值不敏感。
 
@@ -230,27 +230,27 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
   349833  1244       2
   ```
 
-- **Count Vectorization**
+- **2.5.9 Count Vectorization**
 
   除了可以用在 text 特征之外，如果你有 comma-seperated 的 categorical 特征也可以使用这个方法。例如电影类型 `genre`，里头的值长这样 `Action,Sci-Fi,Drama`，就可以先用 `RegexTokenizer` 转成 `Array("action", "sci-fi", "drama")`，再用 `CountVectorizer` 转成 vector。
 
-- **Feature Hashing**
+- **2.5.10 Feature Hashing**
 
   以 user id 为例，透过一个 hash function 把每一个 user id 映射到 `(hashed_1, hashed_2, ..., hashed_m)` 的某个值。指定 m << user id 的取值范围，所以缺点是会有 collision（如果你的 model 足够 robust，倒也是可以不管），优点是可以良好地处理之前没见过的值和罕见的值。当然不只可以 hash 单一值，也可以 hash 一个 vector。
 
   你可以把 feature hashing 表示为单一栏位的数值（例如 2）或是类似 one-hot encoding 那样的多栏位的 binary 表示法（例如 [0, 0, 1]）。
 
-- **Category Embedding**
+- **2.5.11 Category Embedding**
 
-- **User Profile**
+- **2.5.12 User Profile**
 
   使用用户画像来表示每个 user id，例如用户的年龄、性别、职业、收入、居住地、偏好的各种 tag 等，把每个 user 表示成一个 feature vector。除了单一维度的特征之外，也可以建立「用户听过的歌都是哪些曲风」、「用户（30 天内）浏览过的文章都是什么分类，以 TF-IDF 的方式表达。或者是把用户所有喜欢文章对应的向量的平均值作为此用户的 profile。比如某个用户经常关注与推荐系统有关的文章，那么他的 profile 中 "CB"、"CF" 和 "推荐系统" 对应的权重值就会较高。
 
-- **Rare Categorical Varibales**
+- **2.5.13 Rare Categorical Varibales**
 
   先计算好每一种 category 的数量，然后把小于某个 threshold 的 category 都改成 "Others" 之类的值。或是使用 clustering 演算法来达到同样的目的。你也可以直接建立一个新的 binary feature 叫做 rare，要来标示那些相对少见的资料点。
 
-- **Unseen Categorical Variables**
+- **2.5.14 Unseen Categorical Variables**
 
   当你用 training set 的资料 fit 了一个 `StringIndexer`（和 `OneHotEncoder`），把它拿去用在 test set 上时，有一定的机率你会遇到某些 categorical 特征的值只在 test set 出现，所以对只见过 training set 的 transformer 来说，这些就是所谓的 unseen values。
 
@@ -262,12 +262,12 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
 
   如果采用第一种方式，一但你把这个 transformer 拿到 production 去用时，无可避免地还是会遇到 unseen values。不过通常线上的 feature engineering 会有别的做法，例如事先把 user 或 item 的各项特征都算好（定期更新或是 data 产生的时候触发），然后以 id 为 key 存进 Redis 之类的 NoSQL 里，model 要用的时候直接用 user id / item id 拿到处理好的 feature vector。
 
-- **Large Categorical Variables**
+- **2.5.15 Large Categorical Variables**
 
   针对那种非常大的 categorical 特征（例如 id 类的特征），如果你用的是 logistic regression，其实可以硬上 one-hot encoding。不然就是利用上面提到的 feature hashing 或 bin counting 等方式；如果是 GBDT 的话，甚至可以直接用 id 硬上，只要 tree 足够多。
 
 
-#### Feature Construction 特征构建
+#### 2.6 Feature Construction 特征构建
 
 特征构建指的是从原有的特征中，人工地创造出新的特征，通常用来解决一般的线性模型没办法学到非线性特征的问题。其中一个重点是能否通过某些办法，在特征中加入某些「额外的资讯」，虽然也得小心数据偏见的问题。
 
@@ -283,18 +283,25 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
 
 4. `user_history_doc_sim_topics`: 用户读过的所有文章的内文和该篇文章的内文的 TF-IDF 的相似度
 
-- **Temporal Features 时间特征**
-- **Text Features 文字特征**
-- **Spatial Features 地理特征**
-- **Cyclical Features**
+- **2.6.1 Temporal Features 时间特征**
 
-#### Feature Interaction 特征交互
+  对于 date / time 类型的资料，除了转换成 timestamp 和取出 day、month 和 year 做成新的栏位之外，也可以对 hour 做 binning（分成上午、中午、晚上之类的）或是对 day 做 binning（分成工作日、周末）；或是想办法查出该日期当天的天气、节日或活动等讯息，例如 `is_national_holiday` 或 `has_sport_events`。
+
+  更进一步，用 datetime 类的资料通常也可以做成 `spend_hours_last_week` 或 `spend_money_last_week` 这种可以用来表示「趋势」的特征。
+
+- **2.6.2 Text Features 文字特征**
+
+- **2.6.3 Spatial Features 地理特征**
+
+- **2.6.4 Cyclical Features**
+
+#### 2.7 Feature Interaction 特征交互
 
 假设你有 `A` 和 `B` 两个 continuous 特征，你可以用 `A + B`、`A - B`、`A * B` 或 `A / B` 之类的方式建立新的特征。例如 `house_age_at_purchase = house_built_date - house_purchase_date` 或是 `click_through_rate = n_clicks / n_impressions`。
 
 还有一种类似的作法叫 Polynomial Expansion 多项式展开，当 degree 为 2 时，可以把 `(x, y)` 两个特征变成 `(x, x * x, y, x * y, y * y)` 五个特征。
 
-#### Feature Combination 特征组合
+#### 2.8 Feature Combination 特征组合
 
 **特征组合主要是针对 categorical 特征，特征交互则是适用于连续值特征**。但是两者的概念是差不多的，就是把两个以上的特征透过某种方式结合在一起，变成新的特征。通常用来解决一般的线性模型没办法学到非线性特征的问题。
 
@@ -312,7 +319,7 @@ user_id  age  gender  wealth  gender_wealth  gender_wealth_ohe   age_wealth
 6        34   female  middle  female_middle  [0, 0, 0, 0, 1, 0]  [0, 34, 0]
 ```
 
-#### Feature Extraction 特征提取
+#### 2.9 Feature Extraction 特征提取
 
 通常就是指 dimensionality reduction。
 
@@ -320,7 +327,7 @@ user_id  age  gender  wealth  gender_wealth  gender_wealth_ohe   age_wealth
 - **Latent Dirichlet Allocation (LDA)**
 - **Latent Semantic Analysis (LSA)**
 
-#### Feature Selection 特征选择
+#### 2.10 Feature Selection 特征选择
 
 特征选择是指通过某些方法自动地从所有的特征中挑选出有用的特征。
 
@@ -338,7 +345,7 @@ user_id  age  gender  wealth  gender_wealth  gender_wealth_ohe   age_wealth
 
   通常会采用一个会为特征赋予 coefficients 或 importances 的演算法，例如 Logistic Regression（特别是使用 L1 penalty）或 GBDT，直接用权重或重要性对所有特征排序，然后取前 n 个作为特征子集。
 
-#### Feature Learning 特征学习
+#### 2.11 Feature Learning 特征学习
 
 也称为 Representation Learning 或 Automated Feature Engineering。
 
