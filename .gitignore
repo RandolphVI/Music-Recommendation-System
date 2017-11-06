@@ -102,6 +102,7 @@ target/
 ###Private Data info###
 *.txt
 *.json
+*.csv
 temp.py
 Icon?
 *.model
