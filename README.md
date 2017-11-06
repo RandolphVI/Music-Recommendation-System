@@ -137,11 +137,9 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
 
 标准化是分别对单一特征进行（针对 column）；归一化是对每个 observation 进行（针对 row）。
 
-**1. 对 SVM、logistic regression 或其他使用 squared loss function 的演算法来说，需要 standardization；**
-
-**2. 对 Vector Space Model 来说，需要 normalization；**
-
-**3. 对 tree-based 的算法，基本上都不需要标准化或归一化，它们对 scale 不敏感。**
+- **对 SVM、logistic regression 或其他使用 squared loss function 的演算法来说，需要 standardization；**
+- **对 Vector Space Model 来说，需要 normalization**；
+- **对 tree-based 的算法，基本上都不需要标准化或归一化，它们对 scale 不敏感。**
 
 #### 2.5 Feature Transformation 特征变换
 
