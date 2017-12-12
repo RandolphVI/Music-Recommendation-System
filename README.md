@@ -1,4 +1,4 @@
-# ALL WE NEED IS FFM 🙃
+# ALL WE NEED IS Tree 🌲
 
 This project is my project, and it is also a study of TensorFlow, Deep Learning(CNN, RNN, LSTM, etc.) and other Machine Learning things.
 
@@ -7,9 +7,11 @@ The main objective of the project is to predict the chances of a user listening 
 ## Requirements
 
 - Python 3.x
-- **Tensorflow 1.2.0 +**
 - Numpy
-- Gensim
+- **CatBoost**
+- **XGBoost**
+- **LightBGM**
+- **H20**
 - **GBDT**
 - **Libffm**
 - **g++ (with C++11 and OpenMP support)**
@@ -24,14 +26,6 @@ The main objective of the project is to predict the chances of a user listening 
 
 
 
-## GBDT
-
-
-
-## LIBFFM
-
-This most important model used in this solution is called **Field-aware Factorization Machines**. If you want to use this model, please download [LIBFFM](http://www.csie.ntu.edu.tw/~r01922136/libffm) first.
-
 
 
 ## How to Kick the Ass 👾
@@ -41,10 +35,10 @@ This most important model used in this solution is called **Field-aware Factoriz
 #### 原始特征
 
 - 用户特征
-  - `user_id(msno)`
+  - `user_id`
   - `city`
   - `gender`
-  - `bd`
+  - `age`
 - 音乐特征
   - `song_id`
   - `song_length`
@@ -70,10 +64,10 @@ Feature Engineering 是把 raw data 转换成 features 的整个过程的总称�
 
 以推荐系统为例，数据集中的特征可以分成以下四种：
 
-- 用户特征：用户本身的各种属性，例如 user id、性别、所在的城市等
-- 音乐特征：音乐本身的各种属性，例如 item id、歌曲名、演唱者、作曲家、作词家、音乐风格分类等
-- 交互特征：用户对音乐做出的某项行为，该行为的 aggregation 或交叉特征，例如最近听的歌曲的曲风分布或喜爱的歌手的类型
-- 上下文特征：用戶对音乐做出的某项行，该行为的 metadata，例如注册的时间、使用的设备等
+- 用户特征：用户本身的各种属性，例如 `user id`、`gender`（性别）、`city`（所在的城市）等
+- 音乐特征：音乐本身的各种属性，例如`song id`、`name`（歌曲名）、`artist`（演唱者）、`composer`（作曲家）、`lyricist`（作词家）、`genre_ids`（音乐风格分类）等
+- 交互特征：用户对音乐做出的某项行为，该行为的 aggregation 或交叉特征，例如最近听的歌曲的曲风分布或`most_like_artist_type`喜爱的歌手的类型、`listen_count`听歌的次数等
+- 上下文特征：用戶对音乐做出的某项行，该行为的 metadata，例如 `registration_init_time` 注册的时间、`source_type` 使用的设备等
 
 有些特征是在资料 EDA 阶段就可以拿到，有些特征则需要额外的步骤（例如如透过外部的 API 或者其他模型）才能取得。
 
@@ -81,12 +75,33 @@ Feature Engineering 是把 raw data 转换成 features 的整个过程的总称�
 
 - 用户特征
 
-  - `user_days_between_registration_today`：该用户的注册时间距离今天过了几天
-  - `user_days_between_exipration_today`：该用户的退订时间距离今天过了几天
+  - `registration_year`: 该用户的注册年份
+  - `registration_month`：该用户的注册月份
+  - `registration_date`：该用户的注册日
+  - `expiration_year`: 该用户的退订年份
+  - `expiration_month`：该用户的退订月份
+  - `expiration_date`：该用户的退订日
+  - `membership_days`：该用户从注册到退订的时间天数
 
 - 音乐特征
 
-  - `song_id`
+  - `is_featured`：判断 `artist` 中是否存在 `feat.` 信息（**`.feat`** 是 **featuring** 的缩写，如果直译的话，指「以……为特色、亮点」。**`feat.`** 在歌曲里面是指专辑表演者与另外（一个或者多个）的艺人/组合的合作，也就是请人在歌曲中客串。）
+  - `smaller_song`：判断 `song_length` 是否小于 `avg_song_length` （`avg_song_length` 是 **train & test** 所出现的所有 `song_length` 的平均长度） 
+  - `song_lang_boolean`： 判断 `language`  是否为 **`17.0`** 或 **`45.0`**，如果是则记为 1， 否则记为 0
+  - `artist_composer`：判断 `artisit` 与 `composer` 中是否出现同样的艺人，如果有则记为 1，否则记为0（间接反映艺人的有才程度）
+  - `artist_composer_lyricist`：判断 `artisit` 、 `composer` 以及 `lyricist` 中是否出现同样的艺人，如果有则记为 1，否则记为0（间接反映艺人的有才程度）
+  - `genre_count`： 该歌曲的 `genre_ids` 的个数
+  - `artist_count`：该歌曲的 `artist` 的个数
+  - `composer_count`：该歌曲的 `composer` 的个数
+  - `lyricist_count`：该歌曲的 `lyricist` 的个数
+  - `count_song_played`：该歌曲 `song_id` 在 **train & test** 中出现的次数
+  - `count_artist_played`：该艺人 `artist` 在 **train & test** 中出现的次数
+  - `count_genre_played`：该曲风 `genre_ids` 在 **train & test** 中出现的次数
+  - `count_genre_like`： 该曲风 `genre_ids` 在 **train** 中 **`target=1`**（即被喜欢）的次数
+  - `genre_like_ratio`：`count_genre_like` / `count_genre_played`（反映歌曲被喜爱的程度，或者说流行的程度）
+  - `song_country`：根据 `isrc` 信息得到的歌曲所属的国家信息
+  - `song_publisher`：根据 `isrc` 信息得到的歌曲所属的发布商信息
+  - `song_year`：根据 `isrc` 信息得到的歌曲所属的发布年份信息
 
 - 交互特征
 
@@ -103,13 +118,13 @@ Feature Engineering 是把 raw data 转换成 features 的整个过程的总称�
 - 针对 numerical 特征的缺失值，可以用以下方式取代：
   - `0`，缺点是可能会混淆其他本来就是 0 的数值
   - `-999`，用某个正常情况下不会出现的数值代替，但是选得不好可能会变成异常值，要特别对待
-  - Mean，平均数
+  - Mean，平均数（例如用户年龄信息 `bd` 存在许多异常值（存在负数、零甚至超过一百），对于那些异常值可以用 `age` 的平均值来代替）
   - Median，中位数，跟平均数相比，不会被异常值干扰
 - 针对 categorical 特征的缺失值，可以用以下方式取代：
   - Mode，众数，最常见的值
   - 改成 "Others" 之类的值
 
-假设你要填补 `age` 这个特征，然后你有其他例如 `gender` 这样的特征，你可以分别计算男性和女性的 `age` 的 mean、median 和 mode 来填补缺失值；更复杂一点的方式是，你可以把没有缺失值的数据挑出来，用它们来训练一个 regression 或 classification 模型，用这个模型来预测缺失值。
+假设你要填补 ` age` 这个特征，然后你有其他例如 `gender` 这样的特征，你可以分别计算男性和女性的 `bd` 的 mean、median 和 mode 来填补缺失值；更复杂一点的方式是，你可以把没有缺失值的数据挑出来，用它们来训练一个 regression 或 classification 模型，用这个模型来预测缺失值。
 
 不过其实有些算法是可以容许缺失值的，这时候可以新增一个` has_missing_value` 栏位（称为 NA indicator column）。
 
@@ -185,7 +200,7 @@ Duplicate 或 redundant 尤其指的是那些 features 都一样，但是 target
 
   - Tokyo: [0, 0, 1]
 
-  你也可以改用 Dummy coding，這樣就只需要產生長度為 m -1 的向量：
+  你也可以改用 Dummy coding，这样就只需要产生长度为 m -1 的向量：
 
   - Taipei: [1, 0]
   - Beijing: [0, 1]
@@ -351,9 +366,21 @@ user_id  age  gender  wealth  gender_wealth  gender_wealth_ohe   age_wealth
 - **Neural Network: Restricted Boltzmann Machines**
 - **Deep Learning: Autoencoder**
 
+### Step 3: Choose the Model
+
+#### LIBFFM + GBDT
+
+This model is called **Field-aware Factorization Machines**. If you want to use this model, please download [LIBFFM](http://www.csie.ntu.edu.tw/~r01922136/libffm) first.
+
+#### H2O
+
+#### CatBoost
 
 
-数据总共有 4 列数值特征，15 列类别特征，我首先将 4 列数值特征与 15 列类别特征（通过选取出现的比例非常高的一些类型作为特征, 使用 one-hot 进行编码）放入 gbdt 中训练 30 棵高度均为 7 的树，每棵树作为一个特征， 共有30个特征，特征的值是最后显现出值的叶子节点的序号, 即这个值为0-255, 作者最后将13+26+30一共69个特征的标签经过hash处理, 然后与10^6取模做为特征的索引, 值仍用原来特征的值, 获取到10^6个one-hot编码后的稀疏特征矩阵, 放入FFM模型中进行训练
+#### XGBoost
+
+#### LightBGM
+
 
 ## About Me
 
@@ -369,6 +396,5 @@ LinkedIn: [randolph's linkedin](https://www.linkedin.com/in/randolph-%E9%BB%84%E
 
 ## Reference
 
-- ​
 - [Field-aware Factorization Machines for CTR Prediction](http://ntucsu.csie.ntu.edu.tw/~cjlin/papers/ffm.pdf)
 - [Field-aware Factorization Machines in a Real-world Online Advertising System](https://arxiv.org/pdf/1701.04099.pdf)
