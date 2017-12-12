@@ -101,10 +101,19 @@ target/
 
 ###Private Data info###
 *.txt
-*.json
-*.csv
-temp.py
-Icon?
-*.model
+*.rtf
 *.png
 *.graffle
+*.json
+*.csv
+*.numbers
+*.model
+
+*.sparse
+*.dense
+*.out
+*.ffm
+
+randolph
+temp.py
+Icon?
