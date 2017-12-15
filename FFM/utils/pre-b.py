@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 # 具体做法是将三种特征（类别型特征（包括频繁项与非频繁项），数值型特征，GBDT 筛选得到的显著特征）与对应的特征值结合后的特征名称进行 hash
 # 然后与 nr_bins = 10^6 取余，目的是进行降维
 parser.add_argument('-n', '--nr_bins', type=int, default=int(1e+6))
-# threshold 为频繁特征的阈值，默认值为 10
+# threshold 为频繁特征的阈值，默认值为 100
 parser.add_argument('-t', '--threshold', type=int, default=int(100))
 parser.add_argument('csv_path', type=str)
 parser.add_argument('gbdt_path', type=str)
@@ -67,7 +67,7 @@ def gen_feats(row):
     return feats
 
 
-# 对于那些出现次数超过 threshold（默认为 10） 的类别性特征标记为频繁特征
+# 对于那些出现次数超过 threshold（默认为 100） 的类别性特征标记为频繁特征
 frequent_feats = data_helpers.read_freqent_feats(args['threshold'])
 
 

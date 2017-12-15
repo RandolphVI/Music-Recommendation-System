@@ -30,7 +30,7 @@ for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
 print("Numerical feature: {0}; Categorical feature: {1}".format(num_count, cat_count))
 
 # These features are dense enough (they appear in the dataset more than threshold=k times), so we include them in GBDT
-target_cat_feats = data_helpers.extract_topKfeature('./dac/fc.txt', topK=50)
+target_cat_feats = data_helpers.extract_topKfeature('./data/fc.txt', topK=50)
 
 with open(args['dense_path'], 'w') as f_d, open(args['sparse_path'], 'w') as f_s:
     for row in csv.DictReader(open(args['csv_path'])):

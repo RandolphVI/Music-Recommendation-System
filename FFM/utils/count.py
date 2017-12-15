@@ -24,7 +24,7 @@ for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
                 cat_count += 1
     break
 
-print("Numerical feature: {0}; Categorical feature: {1}".format(num_count, cat_count))
+sys.stderr.write("Numerical feature: {0}; Categorical feature: {1}\n".format(num_count, cat_count))
 
 counts = collections.defaultdict(lambda: [0, 0, 0])
 
@@ -45,5 +45,5 @@ print('Field,Value,Neg,Pos,Total,Ratio')
 for key, (neg, pos, total) in sorted(counts.items(), key=lambda x: x[1][2]):
     if total < 10:
         continue
-    ratio = round(float(pos)/total, 5)
+    ratio = abs(round(float(pos)/total, 5) - 0.5)
     print(key + ',' + str(neg) + ',' + str(pos) + ',' + str(total) + ',' + str(ratio))
