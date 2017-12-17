@@ -16,7 +16,7 @@ The main objective of the project is to predict the chances of a user listening 
 - **Libffm**
 - **g++ (with C++11 and OpenMP support)**
 
-## Data
+## Dataset
 
 [Get the research data](https://www.kaggle.com/c/kkbox-music-recommendation-challenge)
 
@@ -372,14 +372,14 @@ user_id  age  gender  wealth  gender_wealth  gender_wealth_ohe   age_wealth
 
 This model is called **Field-aware Factorization Machines**. If you want to use this model, please download [LIBFFM](http://www.csie.ntu.edu.tw/~r01922136/libffm) first.
 
-#### H2O
-
 #### CatBoost
 
 
 #### XGBoost
 
 #### LightBGM
+
+
 
 
 ## About Me
