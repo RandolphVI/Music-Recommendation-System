@@ -1,38 +1,70 @@
 # -*- coding:utf-8 -*-
 
+import sys
 import csv
 import math
+import collections
 import hashlib
 import pandas as pd
 
 
-def view_file(file_name):
-    with open(file_name, 'r') as f:
-        for index, eachline in enumerate(f, start=1):
-            print(eachline)
-            if index > 5:
-                break
+data_path = './data/'
+
+train_file = data_path + 'train.csv'
+fc_trva_file = data_path + 'fc.trva.txt'
+fc_file = data_path + 'fc.txt'
 
 
-def reverse(input_file, output_file):
-    with open(input_file, 'rb') as fin:
+def count(input_file, output_file):
+    num_count = 0
+    cat_count = 0
+
+    for i, row in enumerate(csv.DictReader(open(input_file)), start=1):
+        if i == 1:
+            for item in row:
+                if 'I' in item:
+                    num_count += 1
+                if 'C' in item:
+                    cat_count += 1
+        break
+
+    print("Numerical feature: {0}; Categorical feature: {1}\n".format(num_count, cat_count))
+
+    counts = collections.defaultdict(lambda: [0, 0, 0])
+
+    for i, row in enumerate(csv.DictReader(open(input_file)), start=1):
+        label = row['target']
+        for j in range(1, cat_count + 1):
+            field = 'C{0}'.format(j)
+            value = row[field]
+            if label == '0':
+                counts[field + ',' + value][0] += 1
+            else:
+                counts[field + ',' + value][1] += 1
+            counts[field + ',' + value][2] += 1
+        if i % 1000000 == 0:
+            print('{0}m'.format(int(i / 1000000)))
+
+    with open(output_file, 'w') as fout:
+        fout.write('Field,Value,Neg,Pos,Total,Deviation\n')
         content = []
-        for index, eachline in enumerate(fin, start=1):
-            if index > 2:
-                content.append(eachline)
+        for key, (neg, pos, total) in sorted(counts.items(), key=lambda x: x[1][2]):
+            if total < 10:
+                continue
+            deviation = round((float(pos / total) - 0.5) * 100, 2)
+            content.append(key + ',' + str(neg) + ',' + str(pos) + ',' + str(total) + ',' + str(deviation) + '\n')
         content.reverse()
-        with open(output_file, 'wb') as fout:
-            for item in content:
-                fout.write(item)
+        for eachline in content:
+            fout.write(eachline)
 
 
-def extra_feature_pair(input_file, output_file, threshold1=0.01, threshold2=200000):
+def extra_feature_pair(input_file, output_file, threshold1=200000, threshold2=1):
     with open(input_file, 'r') as fin, open(output_file, 'w') as fout:
         for index, eachline in enumerate(fin, start=1):
             line = eachline.strip().split(',')
             total = line[4]
-            ratio = line[5]
-            if int(total) >= threshold2:
+            deviation = line[5]
+            if int(total) >= threshold1:
                 fout.write(eachline)
 
 
@@ -62,7 +94,7 @@ def extract_topKfeature(input_file, topK, threshold=40):
 
 def read_freqent_feats(threshold=100):
     frequent_feats = set()
-    for row in csv.DictReader(open('./data/fc.trva.top.txt')):
+    for row in csv.DictReader(open(fc_trva_file)):
         if int(row['Total']) < threshold:
             continue
         frequent_feats.add(row['Field'] + '-' + row['Value'])
@@ -75,6 +107,6 @@ def hashstr(str, nr_bins):
 
 if __name__ == '__main__':
     # view_file('reverse.txt')
-    reverse('./data/fc.trva.top.txt', './data/fc.trva.txt')
-    extra_feature_pair('./data/fc.trva.txt', './data/fc.txt', threshold2=1000000)
+    count(train_file, fc_trva_file)
+    # extra_feature_pair(fc_trva_file, fc_file, threshold1=1000000)
     pass

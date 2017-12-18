@@ -4,7 +4,7 @@ import sys
 import csv
 import math
 import argparse
-import data_helpers
+from utils import data_helpers as dh
 
 if len(sys.argv) == 1:
     sys.argv.append('-h')
@@ -38,7 +38,7 @@ print("Numerical feature: {0}; Categorical feature: {1}".format(num_count, cat_c
 
 
 def gen_hashed_fm_feats(feats, nr_bins):
-    feats = ['{0}:{1}:1'.format(field-1, data_helpers.hashstr(feat, nr_bins)) for (field, feat) in feats]
+    feats = ['{0}:{1}:1'.format(field-1, dh.hashstr(feat, nr_bins)) for (field, feat) in feats]
     return feats
 
 
@@ -68,7 +68,7 @@ def gen_feats(row):
 
 
 # 对于那些出现次数超过 threshold（默认为 100） 的类别性特征标记为频繁特征
-frequent_feats = data_helpers.read_freqent_feats(args['threshold'])
+frequent_feats = dh.read_freqent_feats(args['threshold'])
 
 
 with open(args['out_path'], 'w') as f:
