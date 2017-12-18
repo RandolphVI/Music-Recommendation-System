@@ -1,8 +1,6 @@
 # -*- coding:utf-8 -*-
 
 import logging
-import numpy as np
-from tqdm import *
 
 
 def logger_fn(name, file, level=logging.INFO):
@@ -76,14 +74,7 @@ def check_missing_values(df):
         print("{0} : {1}".format(col, df[col].isnull().sum()))
 
 
-def deal_cat_value(x):
-    if x == 'no_song_year':
-        pass
-    else:
-        return str(x)[:-2]
-
-
-def deal_nan_value(train_merged_df=None, test_merged_df=None):
+def fillin_nan_value(train_merged_df=None, test_merged_df=None):
     if train_merged_df is not None:
         train_merged_df.fillna({'genre_ids': 'no_genre_id',
                                 'artist': 'no_artist',

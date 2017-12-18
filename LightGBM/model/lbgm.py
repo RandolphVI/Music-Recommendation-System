@@ -95,17 +95,23 @@ test = pd.read_csv(data_path + 'test_lgbm.csv', dtype={'bd': np.uint8,
 
 logger.info('Done loading...')
 
+# Checking nan value
+# ==================================================
+
+logger.info('Checking nan value...')
 dh.deal_nan_value(train_merged_df=train, test_merged_df=test)
+logger.info('Done checking...')
 
 # Drop feature
 # ==================================================
 
+logger.info('Dropping data...')
 drop_features = []
 
 train = train.drop(drop_features, axis=1)
 test = test.drop(drop_features, axis=1)
 
-logger.info('Done droping...')
+logger.info('Done dropping...')
 
 # Add Features
 # ==================================================
@@ -114,7 +120,7 @@ logger.info('Adding new features...')
 
 logger.info('Done adding features...')
 
-# Split Training Set and Test Set
+# Split Dataset
 # ==================================================
 
 logger.info("Train test and validation sets...")
@@ -218,6 +224,7 @@ logger.info('Done saving DART model predictions...')
 
 # Averaging two model predictions
 # ==================================================
+
 p_test_avg = np.mean([p_test_1, p_test_2], axis=0)
 
 subm_avg = pd.DataFrame()
