@@ -58,11 +58,12 @@ def count(input_file, output_file):
 def extra_feature_pair(input_file, output_file, threshold1=200000, threshold2=1):
     with open(input_file, 'r') as fin, open(output_file, 'w') as fout:
         for index, eachline in enumerate(fin, start=1):
-            line = eachline.strip().split(',')
-            total = line[4]
-            deviation = line[5]
-            if int(total) >= threshold1:
-                fout.write(eachline)
+            if index > 2:
+                line = eachline.strip().split(',')
+                total = line[4]
+                deviation = line[5]
+                if int(total) >= threshold1:
+                    fout.write(eachline)
 
 
 def extract_topKfeature(input_file, topK, threshold=40):
@@ -103,7 +104,5 @@ def hashstr(str, nr_bins):
 
 
 if __name__ == '__main__':
-    # view_file('reverse.txt')
     count(train_file, fc_trva_file)
-    # extra_feature_pair(fc_trva_file, fc_file, threshold1=1000000)
-    pass
+    extra_feature_pair(fc_trva_file, fc_file, threshold1=1000000)
