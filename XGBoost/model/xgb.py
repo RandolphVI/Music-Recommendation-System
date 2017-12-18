@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
+from tqdm import *
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from utils import data_helpers as dh
@@ -20,80 +21,9 @@ logger = dh.logger_fn('xgblog', (logs_path + 'xgb-{}.log').format(time.asctime()
 # ==================================================
 
 logger.info('Loading data...')
-train = pd.read_csv(data_path + 'train.csv', dtype={'target': np.uint8,
-                                                    'bd': np.uint8,
-                                                    'membership_days': np.uint16,
-                                                    'song_length': np.uint16,
-                                                    'genre_count': np.uint8,
-                                                    'artist_count': np.uint8,
-                                                    'composer_count': np.uint8,
-                                                    'lyricist_count': np.uint8,
-                                                    'count_song_played': np.uint32,
-                                                    'count_artist_played': np.uint32,
-                                                    'count_genre_played': np.uint32,
-                                                    'listen_count': np.uint32,
-                                                    'user_id': 'category',
-                                                    'song_id': 'category',
-                                                    'source_system_tab': 'category',
-                                                    'source_screen_name': 'category',
-                                                    'source_type': 'category',
-                                                    'city': 'category',
-                                                    'gender': 'category',
-                                                    'registered_via': 'category',
-                                                    'registration_year': 'category',
-                                                    'registration_month': 'category',
-                                                    'registration_date': 'category',
-                                                    'expiration_year': 'category',
-                                                    'expiration_month': 'category',
-                                                    'expiration_date': 'category',
-                                                    'genre_ids': 'category',
-                                                    'artist': 'category',
-                                                    'composer': 'category',
-                                                    'lyricist': 'category',
-                                                    'language': 'category',
-                                                    'smaller_song': 'category',
-                                                    'artist_composer': 'category',
-                                                    'artist_composer_lyricist': 'category',
-                                                    'song_country': 'category',
-                                                    'song_publisher': 'category',
-                                                    'song_year': 'category'})
 
-test = pd.read_csv(data_path + 'test.csv', dtype={'bd': np.uint8,
-                                                  'membership_days': np.uint16,
-                                                  'song_length': np.uint16,
-                                                  'genre_count': np.uint8,
-                                                  'artist_count': np.uint8,
-                                                  'composer_count': np.uint8,
-                                                  'lyricist_count': np.uint8,
-                                                  'count_song_played': np.uint32,
-                                                  'count_artist_played': np.uint32,
-                                                  'count_genre_played': np.uint32,
-                                                  'listen_count': np.uint32,
-                                                  'user_id': 'category',
-                                                  'song_id': 'category',
-                                                  'source_system_tab': 'category',
-                                                  'source_screen_name': 'category',
-                                                  'source_type': 'category',
-                                                  'city': 'category',
-                                                  'gender': 'category',
-                                                  'registered_via': 'category',
-                                                  'registration_year': 'category',
-                                                  'registration_month': 'category',
-                                                  'registration_date': 'category',
-                                                  'expiration_year': 'category',
-                                                  'expiration_month': 'category',
-                                                  'expiration_date': 'category',
-                                                  'genre_ids': 'category',
-                                                  'artist': 'category',
-                                                  'composer': 'category',
-                                                  'lyricist': 'category',
-                                                  'language': 'category',
-                                                  'smaller_song': 'category',
-                                                  'artist_composer': 'category',
-                                                  'artist_composer_lyricist': 'category',
-                                                  'song_country': 'category',
-                                                  'song_publisher': 'category',
-                                                  'song_year': 'category'})
+train = pd.read_csv(data_path + 'train.csv')
+test = pd.read_csv(data_path + 'test.csv')
 
 logger.info('Done loading...')
 
@@ -128,10 +58,19 @@ logger.info('Done adding features...')
 cols = list(train.columns)
 cols.remove('target')
 
-for col in train.columns:
-    if train[col].dtype == object:
-        train[col] = train[col].astype('category')
-        test[col] = test[col].astype('category')
+for col in tqdm(cols):
+    if train[col].dtype == 'object':
+        train[col] = train[col].apply(str)
+        test[col] = test[col].apply(str)
+
+        le = LabelEncoder()
+        train_vals = list(train[col].unique())
+        test_vals = list(test[col].unique())
+        le.fit(train_vals + test_vals)
+        train[col] = le.transform(train[col])
+        test[col] = le.transform(test[col])
+
+        print(col + ': ' + str(len(train_vals)) + ', ' + str(len(test_vals)))
 
 X = np.array(train.drop(['target'], axis=1))
 y = train['target'].values
