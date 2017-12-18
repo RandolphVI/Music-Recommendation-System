@@ -99,7 +99,7 @@ logger.info('Done loading...')
 # ==================================================
 
 logger.info('Checking nan value...')
-dh.deal_nan_value(train_merged_df=train, test_merged_df=test)
+dh.fillin_nan_value(train_merged_df=train, test_merged_df=test)
 logger.info('Done checking...')
 
 # Drop feature
