@@ -1,11 +1,8 @@
 # -*- coding:utf-8 -*-
 
-import sys
 import csv
-import math
 import collections
 import hashlib
-import pandas as pd
 
 
 data_path = './data/'
