@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+__author__ = 'Randolph'
 
 import gc
 import time
@@ -11,7 +12,7 @@ data_path = '../data/'
 result_path = '../result/'
 logs_path = '../logs/'
 
-logger = dh.logger_fn('lgbmlog', (logs_path + 'lgbm-{}.log').format(time.asctime()))
+logger = dh.logger_fn('lgbmlog', (logs_path + 'lgbm-{0}.log').format(time.asctime()))
 
 # Loading Data
 # ==================================================
