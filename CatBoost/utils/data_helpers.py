@@ -4,9 +4,13 @@ import joblib
 import logging
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
+
 
 from itertools import combinations
 from sklearn.preprocessing import LabelEncoder
+from scipy.sparse import coo_matrix
+from lightfm import LightFM
 
 data_path = '../data/'
 result_path = '../result/'
@@ -222,7 +226,50 @@ def create_features():
         return s2 / s1
 
     def matrix_factorization(df, df_history):
-        pass
+        cols = ['msno', 'source_type']
+        group = get_group(df, cols)
+        group_history = get_group(df_history, cols)
+
+        encoder = LabelEncoder()
+        encoder.fit(pd.concat([group, group_history]))
+
+        df['user_id'] = encoder.transform(group)
+        df_history['uesr_id'] = encoder.transform(group_history)
+
+        num_users = max(df['user_id'].max(), df_history['user_id'].max()) + 1
+        num_items = max(df['song_id'].max(), df_history['song_id'].max()) + 1
+        num_msno = max(df['msno'].max(), df_history['msno'].max()) + 1
+
+        M = coo_matrix(
+            (df_history['target'], (df_history['user_id'], df_history['song_id'])),
+            shape=(num_users, num_items)
+        )
+
+        user_features = pd.concat([df, df_history])[['msno', 'user_id']].drop_duplicates()
+
+        user_features = coo_matrix(
+            (np.ones(len(user_features)), (user_features['user_id'], user_features['msno'])),
+            shape=[num_users, num_msno]
+        )
+
+        user_features = sp.hstack([sp.eye(num_users), user_features])
+
+        model = LightFM(no_components=50, learning_rate=0.1)
+
+        model.fit(
+            M,
+            epochs=2,
+            num_threads=50,
+            user_features=user_features
+        )
+
+        result = model.predict(
+            df['user_id'].values,
+            df['song_id'].values,
+            user_features=user_features
+        )
+
+        return result
 
     def col_name(cols, func):
         return '_'.join(cols) + '_' + func.__name__
@@ -289,6 +336,17 @@ def create_features():
 
         return X
 
+    Xtest = feature_engineer(df_test, df_history_test)
+    Xtrain0 = feature_engineer(df_trains[0], df_history_trains[0])
+    Xtrain1 = feature_engineer(df_trains[1], df_history_trains[1])
+
+    Xtest.to_hdf(data_path + 'Xtest.hdf', key='abc')
+    Xtrain0.to_hdf(data_path + 'Xtrain0.hdf', key='abc')
+    Xtrain1.to_hdf(data_path + 'Xtrain1.hdf', key='abc')
+
+    df_trains[0]['target'].to_hdf(data_path + 'ytrain0.hdf', key='abc')
+    df_trains[1]['target'].to_hdf(data_path + 'ytrain1.hdf', key='abc')
+
 
 def train_model(model_xgb, model_cb):
     Xtrain0 = pd.read_hdf(data_path + 'Xtrain0.hdf')
@@ -352,6 +410,8 @@ def blend(pct1, pct2):
     p_c = pct1 * p_cb_mf + pct2 * p_cb
 
     p = pct1 * p_c + pct2 * p_x
+
+    return p
 
 
 def make_submission(data):
