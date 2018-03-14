@@ -92,6 +92,8 @@ def create_features():
     for col in categorical_columns:
         orders[col] = 10 ** (int(np.log(all_data[col].max() + 1) / np.log(10)) + 1)
 
+    print('Orders computing finished...')
+
     # =================================================
     def get_group(df, cols):
         group = df[cols[0]].copy()
@@ -277,11 +279,18 @@ def create_features():
     def feature_engineer(df, df_history):
         X = pd.DataFrame()
 
+        print('Feature_Engineer Begins...')
+        print('Totally 6 steps.')
+
         for num_col in [1, 2]:
             for cols in combinations(categorical_columns, num_col):
                 for func in [mean, count, time_to_next_heard, count_from_future,
                              last_time_diff, count_from_past]:
+                    print(col_name(cols, func) + ' Begins!')
                     X[col_name(cols, func)] = func(df, df_history, list(cols))
+                    print(col_name(cols, func) + ' Finished!')
+
+        print('Step 1 Finished! [1/6]')
 
         for cols in combinations(categorical_columns, 3):
             for func in [mean, count]:
@@ -289,6 +298,8 @@ def create_features():
             if 'msno' in cols:
                 for func in [time_to_next_heard, last_time_diff, count_from_past]:
                     X[col_name(cols, func)] = func(df, df_history, list(cols))
+
+        print('Step 2 Finished! [2/6]')
 
         for cols in [
             ['msno'],
@@ -301,6 +312,8 @@ def create_features():
         ]:
             X[col_name(cols, regression)] = regression(df, df_history, cols)
 
+        print('Step 3 Finished! [3/6]')
+
         for cols in [
             ['msno'],
             ['msno', 'genre_ids'],
@@ -309,6 +322,8 @@ def create_features():
             ['msno', 'artist_name']
         ]:
             X[col_name(cols, time_from_prev_heard)] = time_from_prev_heard(df, df_history, cols)
+
+        print('Step 4 Finished! [4/6]')
 
         for col in ['song_length', 'bd']:
             X[col] = df[col]
@@ -322,6 +337,8 @@ def create_features():
 
         X['matrix_factorization'] = matrix_factorization(df, df_history)
 
+        print('Step 5 Finished! [5/6]')
+
         for i in [500000, 2000000]:
             for cols in [
                 ['msno'],
@@ -334,11 +351,15 @@ def create_features():
             ]:
                 X[col_name(cols, mean) + str(i)] = mean(df_history[-i:], df, cols)
 
+        print('Step 6 Finished! [6/6]')
+
         return X
 
     Xtest = feature_engineer(df_test, df_history_test)
     Xtrain0 = feature_engineer(df_trains[0], df_history_trains[0])
     Xtrain1 = feature_engineer(df_trains[1], df_history_trains[1])
+
+    print('Feature Engineer Finished!')
 
     Xtest.to_hdf(data_path + 'Xtest.hdf', key='abc')
     Xtrain0.to_hdf(data_path + 'Xtrain0.hdf', key='abc')
@@ -423,4 +444,3 @@ def make_submission(data):
 
 if __name__ == '__main__':
     create_features()
-    pass
